@@ -1,27 +1,27 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  MoreHorizontal, 
-  Calendar,
-  Users as UsersIcon,
-  CheckSquare,
-  Loader2
-} from 'lucide-react';
 import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { useQuery } from '@tanstack/react-query';
 import { projectService } from '@/services/api';
+import { useQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
+import {
+    Calendar,
+    CheckSquare,
+    Filter,
+    Loader2,
+    MoreHorizontal,
+    Plus,
+    Search,
+    Users as UsersIcon
+} from 'lucide-react';
+import { useState } from 'react';
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   planning: { label: 'Planning', className: 'status-todo' },
@@ -48,10 +48,12 @@ export default function Projects() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  const { data: projectsData, isLoading } = useQuery({
+  const { data: projectsData, isLoading, isError, error } = useQuery({
     queryKey: ['projects'],
     queryFn: projectService.getAll
   });
+
+  const errorMessage = (error as any)?.message || "An error occurred fetching projects.";
 
   const projects = projectsData?.map((p: any) => ({
     ...p,
@@ -119,6 +121,10 @@ export default function Projects() {
              <div className="flex justify-center items-center h-64">
                <Loader2 className="w-8 h-8 animate-spin text-primary" />
              </div>
+          ) : isError ? (
+            <div className="flex justify-center items-center h-64 text-destructive">
+               <p>Error loading projects: {errorMessage}</p>
+            </div>
           ) : (
           /* Projects Grid */
           <motion.div

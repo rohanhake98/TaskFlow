@@ -5,14 +5,14 @@ import { projectService, taskService } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
-  ArrowUpRight,
-  CheckSquare,
-  Clock,
-  FolderKanban,
-  Loader2,
-  Plus,
-  TrendingUp,
-  Users
+    ArrowUpRight,
+    CheckSquare,
+    Clock,
+    FolderKanban,
+    Loader2,
+    Plus,
+    TrendingUp,
+    Users
 } from 'lucide-react';
 
 const containerVariants = {
@@ -29,17 +29,19 @@ const itemVariants = {
 };
 
 export default function Dashboard() {
-  const { data: projects, isLoading: projectsLoading } = useQuery({
+  const { data: projects, isLoading: projectsLoading, isError: projectsError, error: projectsErrorObj } = useQuery({
     queryKey: ['projects'],
     queryFn: projectService.getAll
   });
 
-  const { data: tasks, isLoading: tasksLoading } = useQuery({
+  const { data: tasks, isLoading: tasksLoading, isError: tasksError, error: tasksErrorObj } = useQuery({
     queryKey: ['tasks'],
     queryFn: taskService.getAll
   });
 
   const isLoading = projectsLoading || tasksLoading;
+  const isError = projectsError || tasksError;
+  const errorMessage = projectsErrorObj?.message || tasksErrorObj?.message || "An error occurred fetching data.";
 
   const stats = [
     { label: 'Active Projects', value: projects?.length || 0, change: '+0', icon: FolderKanban, trend: 'up' },
@@ -71,6 +73,10 @@ export default function Dashboard() {
              <div className="flex justify-center items-center h-64">
                <Loader2 className="w-8 h-8 animate-spin text-primary" />
              </div>
+          ) : isError ? (
+            <div className="flex justify-center items-center h-64 text-destructive">
+               <p>Error loading data: {errorMessage}</p>
+            </div>
           ) : (
           <>
           {/* Stats Grid */}

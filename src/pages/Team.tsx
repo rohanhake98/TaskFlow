@@ -1,18 +1,18 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Plus, Search, MoreHorizontal, Mail, Phone, Shield, Loader2 } from 'lucide-react';
 import Header from '@/components/layout/Header';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useQuery } from '@tanstack/react-query';
+import { Input } from '@/components/ui/input';
 import { userService } from '@/services/api';
+import { useQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
+import { Loader2, Mail, MoreHorizontal, Phone, Plus, Search, Shield } from 'lucide-react';
+import { useState } from 'react';
 
 const roleConfig: Record<string, { label: string; className: string }> = {
   admin: { label: 'Admin', className: 'bg-primary/10 text-primary' },
@@ -29,10 +29,12 @@ const statusConfig: Record<string, { label: string; className: string }> = {
 export default function Team() {
   const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: usersData, isLoading } = useQuery({
+  const { data: usersData, isLoading, isError, error } = useQuery({
     queryKey: ['users'],
     queryFn: userService.getAll
   });
+
+  const errorMessage = (error as any)?.message || "An error occurred fetching team members.";
 
   const teamMembers = usersData?.map((user: any) => ({
     ...user,
@@ -87,6 +89,10 @@ export default function Team() {
              <div className="flex justify-center items-center h-64">
                <Loader2 className="w-8 h-8 animate-spin text-primary" />
              </div>
+          ) : isError ? (
+            <div className="flex justify-center items-center h-64 text-destructive">
+               <p>Error loading team members: {errorMessage}</p>
+            </div>
           ) : (
           /* Team Grid */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -1,17 +1,17 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Plus, Search, Filter, MoreHorizontal, Clock, User, Loader2 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useQuery } from '@tanstack/react-query';
+import { Input } from '@/components/ui/input';
 import { taskService } from '@/services/api';
+import { useQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
+import { Clock, Filter, Loader2, MoreHorizontal, Plus, Search, User } from 'lucide-react';
+import { useState } from 'react';
 
 interface Task {
   id: number;
@@ -41,10 +41,12 @@ const priorityConfig = {
 export default function Tasks() {
   const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: tasksData, isLoading } = useQuery({
+  const { data: tasksData, isLoading, isError, error } = useQuery({
     queryKey: ['tasks'],
     queryFn: taskService.getAll
   });
+
+  const errorMessage = (error as any)?.message || "An error occurred fetching tasks.";
 
   const tasks = tasksData || [];
 
@@ -95,6 +97,10 @@ export default function Tasks() {
              <div className="flex justify-center items-center h-64">
                <Loader2 className="w-8 h-8 animate-spin text-primary" />
              </div>
+          ) : isError ? (
+            <div className="flex justify-center items-center h-64 text-destructive">
+               <p>Error loading tasks: {errorMessage}</p>
+            </div>
           ) : (
           /* Kanban Board */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 overflow-x-auto">
