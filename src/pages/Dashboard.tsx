@@ -1,37 +1,19 @@
-import { motion } from 'framer-motion';
-import { 
-  FolderKanban, 
-  CheckSquare, 
-  Users, 
-  TrendingUp, 
-  Clock, 
-  ArrowUpRight,
-  Plus
-} from 'lucide-react';
 import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-
-const stats = [
-  { label: 'Active Projects', value: '12', change: '+2', icon: FolderKanban, trend: 'up' },
-  { label: 'Tasks Completed', value: '148', change: '+24', icon: CheckSquare, trend: 'up' },
-  { label: 'Team Members', value: '8', change: '+1', icon: Users, trend: 'up' },
-  { label: 'Productivity', value: '94%', change: '+5%', icon: TrendingUp, trend: 'up' },
-];
-
-const recentProjects = [
-  { name: 'Website Redesign', progress: 75, status: 'active', tasks: 24, dueDate: 'Mar 15' },
-  { name: 'Mobile App Development', progress: 45, status: 'active', tasks: 32, dueDate: 'Apr 1' },
-  { name: 'API Integration', progress: 90, status: 'review', tasks: 12, dueDate: 'Mar 10' },
-  { name: 'Database Migration', progress: 30, status: 'active', tasks: 18, dueDate: 'Mar 25' },
-];
-
-const recentTasks = [
-  { title: 'Review homepage mockups', project: 'Website Redesign', priority: 'high', dueDate: 'Today' },
-  { title: 'Fix authentication bug', project: 'Mobile App', priority: 'urgent', dueDate: 'Today' },
-  { title: 'Update API documentation', project: 'API Integration', priority: 'medium', dueDate: 'Tomorrow' },
-  { title: 'Database schema review', project: 'Database Migration', priority: 'low', dueDate: 'Mar 12' },
-];
+import { projectService, taskService } from '@/services/api';
+import { useQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
+import {
+  ArrowUpRight,
+  CheckSquare,
+  Clock,
+  FolderKanban,
+  Loader2,
+  Plus,
+  TrendingUp,
+  Users
+} from 'lucide-react';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -47,6 +29,28 @@ const itemVariants = {
 };
 
 export default function Dashboard() {
+  const { data: projects, isLoading: projectsLoading } = useQuery({
+    queryKey: ['projects'],
+    queryFn: projectService.getAll
+  });
+
+  const { data: tasks, isLoading: tasksLoading } = useQuery({
+    queryKey: ['tasks'],
+    queryFn: taskService.getAll
+  });
+
+  const isLoading = projectsLoading || tasksLoading;
+
+  const stats = [
+    { label: 'Active Projects', value: projects?.length || 0, change: '+0', icon: FolderKanban, trend: 'up' },
+    { label: 'Tasks Completed', value: tasks?.filter((t: any) => t.status === 'completed').length || 0, change: '+0', icon: CheckSquare, trend: 'up' },
+    { label: 'Team Members', value: '0', change: '+0', icon: Users, trend: 'neutral' }, // Mocked for now
+    { label: 'Productivity', value: '0%', change: '+0%', icon: TrendingUp, trend: 'neutral' }, // Mocked for now
+  ];
+
+  const recentProjects = projects?.slice(0, 4) || [];
+  const recentTasks = tasks?.slice(0, 4) || [];
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -59,10 +63,16 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-8"
           >
-            <h1 className="text-3xl font-bold text-foreground mb-2">Welcome back, John!</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Welcome back!</h1>
             <p className="text-muted-foreground">Here's what's happening with your projects today.</p>
           </motion.div>
 
+          {isLoading ? (
+             <div className="flex justify-center items-center h-64">
+               <Loader2 className="w-8 h-8 animate-spin text-primary" />
+             </div>
+          ) : (
+          <>
           {/* Stats Grid */}
           <motion.div
             variants={containerVariants}
@@ -95,7 +105,7 @@ export default function Dashboard() {
           </motion.div>
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Projects Section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -111,7 +121,7 @@ export default function Dashboard() {
               </div>
 
               <div className="space-y-4">
-                {recentProjects.map((project, index) => (
+                {recentProjects.map((project: any, index: number) => (
                   <div
                     key={index}
                     className="p-4 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
@@ -120,7 +130,7 @@ export default function Dashboard() {
                       <div>
                         <h3 className="font-medium text-foreground">{project.name}</h3>
                         <p className="text-sm text-muted-foreground">
-                          {project.tasks} tasks • Due {project.dueDate}
+                          {project.description} • Due {project.deadline}
                         </p>
                       </div>
                       <span
@@ -132,9 +142,9 @@ export default function Dashboard() {
                       </span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Progress value={project.progress} className="flex-1 h-2" />
+                      <Progress value={project.progress || 0} className="flex-1 h-2" />
                       <span className="text-sm font-medium text-muted-foreground">
-                        {project.progress}%
+                        {project.progress || 0}%
                       </span>
                     </div>
                   </div>
@@ -157,7 +167,7 @@ export default function Dashboard() {
               </div>
 
               <div className="space-y-3">
-                {recentTasks.map((task, index) => (
+                {recentTasks.map((task: any, index: number) => (
                   <div
                     key={index}
                     className="p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
@@ -170,7 +180,7 @@ export default function Dashboard() {
                         <h4 className="font-medium text-foreground text-sm truncate">
                           {task.title}
                         </h4>
-                        <p className="text-xs text-muted-foreground">{task.project}</p>
+                        <p className="text-xs text-muted-foreground">{task.description}</p>
                       </div>
                       <span
                         className={`px-2 py-0.5 rounded text-xs font-medium shrink-0 ${
@@ -188,7 +198,7 @@ export default function Dashboard() {
                     </div>
                     <div className="flex items-center gap-1 mt-2 ml-7 text-xs text-muted-foreground">
                       <Clock className="w-3 h-3" />
-                      {task.dueDate}
+                      {task.due_date}
                     </div>
                   </div>
                 ))}
@@ -199,6 +209,8 @@ export default function Dashboard() {
               </Button>
             </motion.div>
           </div>
+          </>
+          )}
         </div>
       </main>
     </div>
