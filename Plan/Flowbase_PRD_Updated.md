@@ -1,41 +1,52 @@
-# Flowbase - AI Productivity SaaS Application (Updated UI Theme)
+# Flowbase - AI Personal Productivity Workspace
 
-## UI/UX Design System (Claude Inspired)
-
-### Color System
-- Primary Background: #FFFFFF
-- Secondary Background: #FFF7ED (light orange tint)
-- Primary Accent: #F97316 (orange)
-- Accent Hover: #EA580C
-- Text Primary: #0F172A
-- Text Secondary: #64748B
-- Border: #E5E7EB
-
-### Typography
-- Font: Inter / system sans-serif
-- Headings: Bold, tight spacing
-- Body: Medium weight, high readability
-
-### Design Principles
-- Minimal and distraction-free
-- Clean spacing and soft shadows
-- Focus on readability and hierarchy
-- Subtle orange highlights for actions
-
-### Components Style
-- Buttons: Rounded-md, orange primary, soft hover
-- Cards: White background, light border, subtle shadow
-- Inputs: Border-gray, focus:ring-orange-500
-- Sidebar: White with light separators
-- Chat UI: Claude-style conversational layout
-
-### Layout
-- Left Sidebar (collapsible)
-- Top Header (minimal)
-- Main Content (centered, max-width)
-- Floating AI Chat (bottom-right)
+## Design Philosophy (Personal Edition)
+Focus on **"Flow"** and **"Deep Work."** The interface should feel like a private study or a focused digital office, not a corporate communication tool.
 
 ---
 
-( बाकी PRD same as original with UI upgrades applied )
+## 01. PRD (Product Requirements Document)
+**App Name:** Flowbase
+**Tagline:** AI-First Personal Productivity for Solo Creators.
+**Problem:** Existing productivity tools are built for teams, leading to "feature bloat" that distracts individual users. Solo creators need a tool that understands *their* specific focus and deep-work habits.
 
+**Core Features (Must Have):**
+- **Personal Dashboard:** High-fidelity overview of your focus, energy, and progress.
+- **Project & Task Management:** Simple, powerful CRUD for individual goals.
+- **Personal AI Assistant:** A productivity partner that remembers your context and helps you stay in flow.
+- **Responsive, Minimalist UI:** Optimized for single-user efficiency.
+
+**Out of Scope:**
+- Team Collaboration (No shared boards, no multi-user editing).
+- Advanced Permissions (Owner-only access).
+- Public Project Sharing.
+
+---
+
+## 02. UI/UX Design System (Claude Inspired)
+- **Primary Background:** #FFFFFF (Focus)
+- **Secondary Background:** #FFF7ED (Calm)
+- **Primary Accent:** #F97316 (Energy)
+- **Radius:** 12px (Softness)
+- **Typography:** Inter (Sans-serif), bold headings, medium-weight body.
+
+### Design Principles
+- Minimal and distraction-free.
+- Clean spacing and soft shadows.
+- Focus on readability and hierarchy.
+- Subtle orange highlights for actions.
+
+---
+
+## 03. Core User Experience
+- **Solo First:** Every feature is built for the individual. No "shared," "team," or "collaborative" nomenclature.
+- **AI as a Coach:** The AI doesn't just manage tasks; it understands your personal energy, goals, and habits.
+- **Minimalist Friction:** One-click task entry, zero-clutter navigation.
+
+---
+
+## 04. Technical Stack
+- **Frontend:** React 18, Vite, TypeScript, Tailwind CSS.
+- **Components:** Shadcn/UI, Lucide, Framer Motion.
+- **Backend:** Supabase (Auth, DB, Real-time).
+- **Deployment:** Vercel.
