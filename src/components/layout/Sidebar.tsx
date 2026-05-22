@@ -134,8 +134,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <div className="w-full h-full rounded-xl overflow-hidden bg-gradient-to-br from-indigo-500 to-purple-600" />
               </div>
               <div>
-                <p className="text-[13px] font-black text-slate-900 leading-none">Studio space</p>
-                <p className="text-[10px] text-slate-400 font-bold mt-1.5 uppercase tracking-wider">5 collaborators</p>
+                <p className="text-[13px] font-black text-slate-900 leading-none">Personal Space</p>
+                <p className="text-[10px] text-emerald-500 font-bold mt-1.5 uppercase tracking-wider">Focus Mode Active</p>
               </div>
             </div>
             <div className="flex flex-col gap-0.5 text-slate-400">

@@ -4,15 +4,15 @@ import { PublicLayout } from "./components/layout/PublicLayout";
 import { AIChat } from "./components/ui/AIChat";
 import Dashboard from "./pages/Dashboard";
 import Calendar from "./pages/Calendar";
+import Projects from "./pages/Projects";
+import Tasks from "./pages/Tasks";
+import Notes from "./pages/Notes";
 import Landing from "./pages/Landing";
 import Solutions from "./pages/Solutions";
 import Pricing from "./pages/Pricing";
 
 // Placeholder components for other routes
 const AICoach = () => <div className="p-8 text-center text-slate-500 font-bold">AI Assistant Coach (Coming Soon)</div>;
-const Projects = () => <div className="p-8 text-center text-slate-500 font-bold">Project Manager (Coming Soon)</div>;
-const Tasks = () => <div className="p-8 text-center text-slate-500 font-bold">Task / Kanban Board (Coming Soon)</div>;
-const Notes = () => <div className="p-8 text-center text-slate-500 font-bold">Personal Notes (Coming Soon)</div>;
 const Whiteboard = () => <div className="p-8 text-center text-slate-500 font-bold">Creative Whiteboard (Coming Soon)</div>;
 const Spaces = () => <div className="p-8 text-center text-slate-500 font-bold">Personal Spaces (Coming Soon)</div>;
 const Builder = () => <div className="p-8 text-center text-slate-500 font-bold">AI Template Builder (Coming Soon)</div>;
