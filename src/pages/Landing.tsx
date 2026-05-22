@@ -23,7 +23,7 @@ export default function Landing() {
               Flowbase is the AI-first workspace designed for solo creators who want to stay in flow and accomplish more.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link to="/dashboard" className="w-full sm:w-auto bg-primary text-white px-8 py-4 rounded-2xl text-lg font-bold shadow-xl shadow-orange-200 hover:bg-orange-600 transition-all flex items-center justify-center gap-2 group">
+              <Link to="/login" className="w-full sm:w-auto bg-primary text-white px-8 py-4 rounded-2xl text-lg font-bold shadow-xl shadow-orange-200 hover:bg-orange-600 transition-all flex items-center justify-center gap-2 group">
                 Start building for free
                 <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
               </Link>

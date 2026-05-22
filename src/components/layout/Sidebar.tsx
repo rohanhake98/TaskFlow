@@ -13,9 +13,11 @@ import {
   Search,
   ChevronLeft,
   MoreVertical,
-  ChevronRight
+  ChevronRight,
+  User as UserIcon
 } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
+import { useUser } from "@clerk/clerk-react";
 import { cn } from "../../lib/utils";
 
 const menuGroups = [
@@ -40,7 +42,7 @@ const menuGroups = [
     title: "Build",
     items: [
       { icon: Wand2, label: "AI Template Builder", path: "/builder" },
-      { icon: Settings, label: "Settings", path: "/settings" },
+      { icon: Settings, label: "Settings", path: "/profile" },
     ]
   }
 ];
@@ -51,6 +53,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
+  const { user } = useUser();
+
   return (
     <>
       {/* Mobile Overlay */}
@@ -128,21 +132,37 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         {/* Profile / Workspace Switcher */}
         <div className="p-4 mt-auto">
-          <div className="bg-slate-50 border border-slate-100 rounded-2xl p-3 flex items-center justify-between group cursor-pointer hover:bg-white hover:shadow-md transition-all">
+          <Link 
+            to="/profile" 
+            onClick={onClose}
+            className="bg-slate-50 border border-slate-100 rounded-2xl p-3 flex items-center justify-between group cursor-pointer hover:bg-white hover:shadow-md transition-all"
+          >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-indigo-100">
-                <div className="w-full h-full rounded-xl overflow-hidden bg-gradient-to-br from-indigo-500 to-purple-600" />
-              </div>
+              {user?.imageUrl ? (
+                <img 
+                  src={user.imageUrl} 
+                  className="w-10 h-10 rounded-xl object-cover shadow-lg shadow-indigo-100 border-2 border-white" 
+                  alt="Profile" 
+                />
+              ) : (
+                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-100">
+                  <UserIcon size={20} />
+                </div>
+              )}
               <div>
-                <p className="text-[13px] font-black text-slate-900 leading-none">Personal Space</p>
-                <p className="text-[10px] text-emerald-500 font-bold mt-1.5 uppercase tracking-wider">Focus Mode Active</p>
+                <p className="text-[13px] font-black text-slate-900 leading-none">
+                  {user?.firstName ? `${user.firstName}'s Space` : "Personal Space"}
+                </p>
+                <p className="text-[10px] text-emerald-500 font-bold mt-1.5 uppercase tracking-wider">
+                  Focus Mode Active
+                </p>
               </div>
             </div>
             <div className="flex flex-col gap-0.5 text-slate-400">
               <ChevronRight size={14} className="rotate-[-90deg]" />
               <ChevronRight size={14} className="rotate-[90deg]" />
             </div>
-          </div>
+          </Link>
         </div>
       </aside>
     </>

@@ -34,13 +34,7 @@ export function TopNav({ onMenuClick }: TopNavProps) {
         <div className="h-6 w-[1px] bg-slate-200 mx-1 hidden xs:block" />
         
         <div className="flex items-center gap-3 pl-1">
-          <div className="text-right hidden sm:block">
-            <p className="text-xs font-bold text-slate-900 leading-none">Alex Rivera</p>
-            <p className="text-[10px] text-slate-400 mt-1 font-medium">Free Plan</p>
-          </div>
-          <div className="w-8 h-8 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center text-primary overflow-hidden hover:bg-orange-100 transition-colors cursor-pointer">
-            <User size={16} />
-          </div>
+          <UserButton afterSignOutUrl="/" />
         </div>
       </div>
     </header>

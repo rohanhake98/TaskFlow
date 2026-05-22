@@ -25,3 +25,10 @@ dist-ssr
 
 # Agents
 .agents/
+
+# Local env files
+.env.local
+.env.*.local
+
+# Plans
+Plan/signin_plan.md

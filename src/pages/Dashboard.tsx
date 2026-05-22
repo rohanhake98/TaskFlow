@@ -12,10 +12,12 @@ import {
   Clock
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useUser } from "@clerk/clerk-react";
 import { cn } from "../lib/utils";
 
 export default function Dashboard() {
-  const userName = "kegego5034";
+  const { user } = useUser();
+  const userName = user?.firstName || user?.fullName || "Solo Creator";
 
   // Semantic Pastel Palette from Documentation
   const moduleCards = [
