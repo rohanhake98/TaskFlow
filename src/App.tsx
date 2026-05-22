@@ -41,6 +41,19 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+const PublicOnlyRoute = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <>
+      <SignedIn>
+        <Navigate to="/dashboard" replace />
+      </SignedIn>
+      <SignedOut>
+        {children}
+      </SignedOut>
+    </>
+  );
+};
+
 function App() {
   return (
     <Router>
@@ -50,7 +63,11 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/solutions" element={<Solutions />} />
           <Route path="/pricing" element={<Pricing />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={
+            <PublicOnlyRoute>
+              <Login />
+            </PublicOnlyRoute>
+          } />
         </Route>
 
         {/* Authenticated App Routes with Sidebar/TopNav */}

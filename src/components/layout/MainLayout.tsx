@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Sidebar } from "./Sidebar";
 import { Menu } from "lucide-react";
+import { TaskModal } from "../ui/TaskModal";
 import { cn } from "../../lib/utils";
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
@@ -45,6 +46,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           </div>
         </main>
       </div>
+      <TaskModal />
     </div>
   );
 }

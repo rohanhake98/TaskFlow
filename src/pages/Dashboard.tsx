@@ -13,10 +13,12 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
+import { useTaskModal } from "../context/TaskContext";
 import { cn } from "../lib/utils";
 
 export default function Dashboard() {
   const { user } = useUser();
+  const { openTaskModal } = useTaskModal();
   const userName = user?.firstName || user?.fullName || "Solo Creator";
 
   // Semantic Pastel Palette from Documentation
@@ -82,7 +84,7 @@ export default function Dashboard() {
       path: "/ai-assistant"
     },
     { 
-      label: "AI Template Builder", 
+      label: "AI Builder", 
       stat: "0 templates", 
       subStat: "0 sidebar apps pinned", 
       icon: Wand2, 
@@ -126,10 +128,13 @@ export default function Dashboard() {
               Your workspace is awake: tasks, calendar, pages, and AI work are gathered here for a clear start.
             </p>
             <div className="flex items-center gap-3">
-              <Link to="/tasks" className="bg-primary text-white px-6 py-2.5 rounded-xl text-sm font-black shadow-xl shadow-orange-200 hover:bg-orange-600 transition-all flex items-center gap-2">
+              <button 
+                onClick={() => openTaskModal()}
+                className="bg-primary text-white px-6 py-2.5 rounded-xl text-sm font-black shadow-xl shadow-orange-200 hover:bg-orange-600 transition-all flex items-center gap-2"
+              >
                 <Plus size={18} strokeWidth={3} />
                 <span>New task</span>
-              </Link>
+              </button>
               <Link to="/calendar" className="bg-white text-slate-700 border-2 border-slate-100 px-6 py-2.5 rounded-xl text-sm font-black hover:bg-slate-50 transition-all flex items-center gap-2">
                 <Calendar size={18} />
                 <span>Calendar</span>
@@ -196,17 +201,35 @@ export default function Dashboard() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {quickAccess.map((item, i) => (
-              <Link key={i} to={item.path} className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:shadow-lg transition-all group flex items-start gap-3.5">
-                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 shadow-sm", item.bg, item.color)}>
-                  <item.icon size={20} />
-                </div>
-                <div>
-                  <h4 className="font-black text-slate-700 text-[13px] mb-1">{item.title}</h4>
-                  <p className="text-[10px] text-slate-400 font-bold leading-relaxed">{item.desc}</p>
-                </div>
-              </Link>
-            ))}
+            {quickAccess.map((item, i) => {
+              const isCreateTask = item.title === "Create Task";
+              
+              return isCreateTask ? (
+                <button 
+                  key={i} 
+                  onClick={() => openTaskModal()}
+                  className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:shadow-lg transition-all group flex items-start gap-3.5 text-left w-full"
+                >
+                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 shadow-sm", item.bg, item.color)}>
+                    <item.icon size={20} />
+                  </div>
+                  <div>
+                    <h4 className="font-black text-slate-700 text-[13px] mb-1">{item.title}</h4>
+                    <p className="text-[10px] text-slate-400 font-bold leading-relaxed">{item.desc}</p>
+                  </div>
+                </button>
+              ) : (
+                <Link key={i} to={item.path} className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:shadow-lg transition-all group flex items-start gap-3.5">
+                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 shadow-sm", item.bg, item.color)}>
+                    <item.icon size={20} />
+                  </div>
+                  <div>
+                    <h4 className="font-black text-slate-700 text-[13px] mb-1">{item.title}</h4>
+                    <p className="text-[10px] text-slate-400 font-bold leading-relaxed">{item.desc}</p>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
 

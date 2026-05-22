@@ -54,9 +54,9 @@ export default function Login() {
           
           <div className="w-full max-w-md flex justify-center">
             {isLogin ? (
-              <SignIn routing="hash" forceRedirectUrl="/dashboard" />
+              <SignIn path="/login" routing="path" forceRedirectUrl="/dashboard" signUpUrl="/login" />
             ) : (
-              <SignUp routing="hash" forceRedirectUrl="/dashboard" />
+              <SignUp path="/login" routing="path" forceRedirectUrl="/dashboard" signInUrl="/login" />
             )}
           </div>
         </div>

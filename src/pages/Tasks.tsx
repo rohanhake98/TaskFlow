@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { CheckSquare, Plus, Zap, Battery, BatteryWarning } from 'lucide-react';
+import { useTaskModal } from '../context/TaskContext';
 import { cn } from '../lib/utils';
 
 type EnergyLevel = 'High' | 'Medium' | 'Low';
@@ -20,6 +21,7 @@ const initialTasks: Task[] = [
 ];
 
 export default function Tasks() {
+  const { openTaskModal } = useTaskModal();
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
 
   const columns: Status[] = ['Backlog', 'Deep Focus', 'Completed'];
@@ -47,7 +49,10 @@ export default function Tasks() {
             Prioritize work based on your current cognitive capacity. Solo tasks, grouped by focus.
           </p>
         </div>
-        <button className="px-5 py-2.5 bg-[#5C4400] text-white rounded-xl text-sm font-black flex items-center gap-2 hover:bg-[#4a3600] transition-colors shadow-lg shadow-amber-100">
+        <button 
+          onClick={() => openTaskModal()}
+          className="px-5 py-2.5 bg-[#5C4400] text-white rounded-xl text-sm font-black flex items-center gap-2 hover:bg-[#4a3600] transition-colors shadow-lg shadow-amber-100"
+        >
           <Plus size={18} />
           Add Task
         </button>

@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
 import { Sparkles } from "lucide-react";
+import { useAuth } from "@clerk/clerk-react";
 
 export function PublicNav() {
+  const { isSignedIn } = useAuth();
+
   return (
     <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-orange-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -17,7 +20,10 @@ export function PublicNav() {
           <Link to="/" className="text-sm font-medium text-slate-600 hover:text-primary transition-colors">Features</Link>
         </div>
         <div className="flex items-center gap-4">
-          <Link to="/login" className="bg-primary text-white px-5 py-2 rounded-xl text-sm font-bold shadow-lg shadow-orange-100 hover:bg-orange-600 transition-all">
+          <Link 
+            to="/login" 
+            className="bg-primary text-white px-5 py-2 rounded-xl text-sm font-bold shadow-lg shadow-orange-100 hover:bg-orange-600 transition-all"
+          >
             Get Started
           </Link>
         </div>

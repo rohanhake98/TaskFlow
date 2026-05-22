@@ -3,6 +3,8 @@ import {
   format, 
   addMonths, 
   subMonths, 
+  addWeeks,
+  subWeeks,
   startOfMonth, 
   endOfMonth, 
   startOfWeek, 
@@ -21,25 +23,46 @@ import {
   Box,
   MoreHorizontal
 } from 'lucide-react';
+import { useTaskModal } from '../context/TaskContext';
 import { cn } from '../lib/utils';
 
 export default function Calendar() {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const { openTaskModal } = useTaskModal();
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week'>('month');
 
-  const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
-  const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
-  const goToToday = () => setCurrentMonth(new Date());
+  const handleNext = () => {
+    if (view === 'month') {
+      setCurrentDate(addMonths(currentDate, 1));
+    } else {
+      setCurrentDate(addWeeks(currentDate, 1));
+    }
+  };
 
-  const monthStart = startOfMonth(currentMonth);
-  const monthEnd = endOfMonth(monthStart);
-  const startDate = startOfWeek(monthStart);
-  const endDate = endOfWeek(monthEnd);
+  const handlePrev = () => {
+    if (view === 'month') {
+      setCurrentDate(subMonths(currentDate, 1));
+    } else {
+      setCurrentDate(subWeeks(currentDate, 1));
+    }
+  };
 
-  const calendarDays = eachDayOfInterval({
-    start: startDate,
-    end: endDate,
-  });
+  const goToToday = () => setCurrentDate(new Date());
+
+  // Logic for calculating days to show
+  let calendarDays: Date[] = [];
+  const monthStart = startOfMonth(currentDate);
+
+  if (view === 'month') {
+    const monthEnd = endOfMonth(monthStart);
+    const startDate = startOfWeek(monthStart);
+    const endDate = endOfWeek(monthEnd);
+    calendarDays = eachDayOfInterval({ start: startDate, end: endDate });
+  } else {
+    const startDate = startOfWeek(currentDate);
+    const endDate = endOfWeek(currentDate);
+    calendarDays = eachDayOfInterval({ start: startDate, end: endDate });
+  }
 
   const weekDays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
@@ -61,26 +84,26 @@ export default function Calendar() {
 
       <div className="flex flex-col xl:flex-row gap-8 items-start">
         {/* Main Calendar Section */}
-        <div className="flex-1 bg-white border border-slate-100 rounded-[32px] overflow-hidden shadow-sm">
+        <div className="flex-1 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
           {/* Calendar Toolbar */}
-          <div className="p-6 border-b border-slate-50 flex flex-wrap items-center justify-between gap-4">
+          <div className="p-8 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h2 className="text-xl font-black text-slate-900 leading-none mb-1.5">
-                {format(currentMonth, 'MMMM yyyy')}
+              <h2 className="text-2xl font-black text-slate-900 leading-none mb-2">
+                {format(currentDate, 'MMMM yyyy')}
               </h2>
-              <p className="text-[13px] text-slate-400 font-bold">
-                Drop drafts or scheduled items onto any date.
+              <p className="text-sm text-slate-400 font-bold tracking-tight">
+                {view === 'month' ? 'Drop drafts or scheduled items onto any date.' : 'View your focused week ahead.'}
               </p>
             </div>
 
             <div className="flex items-center gap-4">
               {/* View Toggle */}
-              <div className="bg-slate-50 p-1 rounded-xl flex items-center border border-slate-100">
+              <div className="bg-slate-100/50 p-1 rounded-xl flex items-center border border-slate-200">
                 <button 
                   onClick={() => setView('month')}
                   className={cn(
                     "px-4 py-1.5 text-xs font-black rounded-lg transition-all",
-                    view === 'month' ? "bg-rose-500 text-white shadow-md shadow-rose-100" : "text-slate-400 hover:text-slate-600"
+                    view === 'month' ? "bg-rose-500 text-white shadow-md shadow-rose-100" : "text-slate-500 hover:text-slate-700"
                   )}
                 >
                   Month
@@ -89,7 +112,7 @@ export default function Calendar() {
                   onClick={() => setView('week')}
                   className={cn(
                     "px-4 py-1.5 text-xs font-black rounded-lg transition-all",
-                    view === 'week' ? "bg-rose-500 text-white shadow-md shadow-rose-100" : "text-slate-400 hover:text-slate-600"
+                    view === 'week' ? "bg-rose-500 text-white shadow-md shadow-rose-100" : "text-slate-500 hover:text-slate-700"
                   )}
                 >
                   Week
@@ -100,40 +123,44 @@ export default function Calendar() {
               <div className="flex items-center gap-2">
                 <button 
                   onClick={goToToday}
-                  className="px-4 py-2 bg-white border border-slate-100 rounded-xl text-xs font-black text-slate-600 hover:bg-slate-50 transition-colors flex items-center gap-2"
+                  className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-black text-slate-600 hover:bg-slate-50 transition-colors flex items-center gap-2 shadow-sm"
                 >
-                  <CalendarIcon size={14} className="text-slate-400" />
+                  <CalendarIcon size={14} className="text-emerald-500" />
                   Today
                 </button>
-                <div className="flex items-center bg-white border border-slate-100 rounded-xl overflow-hidden">
-                  <button onClick={prevMonth} className="p-2 hover:bg-slate-50 transition-colors text-slate-400 hover:text-slate-600">
+                <div className="flex items-center bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                  <button onClick={handlePrev} className="p-2 hover:bg-slate-50 transition-colors text-slate-400 hover:text-slate-700">
                     <ChevronLeft size={18} />
                   </button>
-                  <div className="w-[1px] h-4 bg-slate-100" />
-                  <button onClick={nextMonth} className="p-2 hover:bg-slate-50 transition-colors text-slate-400 hover:text-slate-600">
+                  <div className="w-[1px] h-4 bg-slate-200" />
+                  <button onClick={handleNext} className="p-2 hover:bg-slate-50 transition-colors text-slate-400 hover:text-slate-700">
                     <ChevronRight size={18} />
                   </button>
                 </div>
               </div>
 
               {/* Action Button */}
-              <button className="px-5 py-2.5 bg-[#F05D50] text-white rounded-xl text-sm font-black flex items-center gap-2 hover:bg-[#e04d40] transition-colors shadow-lg shadow-orange-100">
-                <Plus size={18} />
+              <button 
+                onClick={() => openTaskModal()}
+                className="px-5 py-2.5 bg-[#F05D50] text-white rounded-xl text-sm font-black flex items-center gap-2 hover:bg-[#e04d40] transition-colors shadow-lg shadow-orange-100"
+              >
+                <Plus size={18} strokeWidth={3} />
                 New task
               </button>
             </div>
           </div>
 
-          {/* Calendar Grid */}
-          <div className="grid grid-cols-7 border-b border-slate-50">
+          {/* Calendar Grid Header */}
+          <div className="grid grid-cols-7 bg-[#FFFBF7] border-b border-slate-200">
             {weekDays.map(day => (
-              <div key={day} className="py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-r border-slate-50 last:border-r-0 bg-slate-50/30">
+              <div key={day} className="py-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest border-r border-slate-200 last:border-r-0">
                 {day}
               </div>
             ))}
           </div>
 
-          <div className="grid grid-cols-7 grid-rows-5">
+          {/* Calendar Days Grid */}
+          <div className="grid grid-cols-7 border-collapse">
             {calendarDays.map((day, idx) => {
               const isCurrentMonth = isSameMonth(day, monthStart);
               const isCurrentDay = isToday(day);
@@ -142,27 +169,30 @@ export default function Calendar() {
                 <div 
                   key={day.toString()} 
                   className={cn(
-                    "min-h-[120px] p-4 border-r border-b border-slate-50 last:border-r-0 group transition-colors hover:bg-slate-50/50 cursor-pointer relative",
-                    !isCurrentMonth && "bg-slate-50/20"
+                    "min-h-[140px] p-4 border-r border-b border-slate-200 group transition-colors hover:bg-slate-50/30 cursor-pointer relative",
+                    (idx + 1) % 7 === 0 && "border-r-0",
+                    !isCurrentMonth && "bg-slate-50/10 text-slate-300"
                   )}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className={cn(
-                      "text-xs font-black w-7 h-7 flex items-center justify-center rounded-lg transition-all",
+                      "text-[13px] font-black w-7 h-7 flex items-center justify-center rounded-lg transition-all",
                       isCurrentDay 
                         ? "bg-[#F05D50] text-white shadow-lg shadow-orange-100" 
-                        : isCurrentMonth ? "text-slate-900" : "text-slate-300"
+                        : isCurrentMonth ? "text-slate-900 font-bold" : "text-slate-300"
                     )}>
                       {format(day, 'd')}
                     </span>
-                    <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white rounded-md text-slate-400 transition-all">
+                    <button 
+                      onClick={() => openTaskModal(day)}
+                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white rounded-md text-slate-400 transition-all border border-slate-100"
+                    >
                       <Plus size={14} />
                     </button>
                   </div>
                   
-                  {/* Event Placeholders could go here */}
                   <div className="space-y-1">
-                    {/* Placeholder for real tasks */}
+                    {/* Event indicators can be added here */}
                   </div>
                 </div>
               );
@@ -172,31 +202,29 @@ export default function Calendar() {
 
         {/* Draft Task Panel */}
         <div className="w-full xl:w-80 space-y-4">
-          <div className="bg-[#E9F5F1] border border-[#D7ECE5] rounded-[32px] p-6">
+          <div className="bg-[#E9F5F1] border border-[#D7ECE5] rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-sm font-black text-slate-900 leading-none mb-1">Draft Task Panel</h3>
-                <p className="text-[11px] text-emerald-600/70 font-bold uppercase tracking-wider">Unscheduled work waits here.</p>
+                <h3 className="text-sm font-black text-slate-900 leading-none mb-1.5 tracking-tight">Draft Task Panel</h3>
+                <p className="text-[10px] text-emerald-600/70 font-bold uppercase tracking-wider">Unscheduled work waits here.</p>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="bg-white px-2 py-0.5 rounded-lg text-[10px] font-black text-slate-400 border border-emerald-100">0</span>
-                <button className="p-1.5 hover:bg-white rounded-lg text-emerald-600 transition-colors">
-                  <Inbox size={16} />
-                </button>
+              <div className="flex items-center gap-2 text-slate-400">
+                <span className="bg-white/80 px-2 py-0.5 rounded-lg text-[10px] font-black border border-emerald-100/50">0</span>
+                <Inbox size={16} className="text-slate-300" />
               </div>
             </div>
 
-            <button className="w-full bg-white border-2 border-dashed border-emerald-200 py-3 rounded-2xl text-xs font-black text-emerald-600 flex items-center justify-center gap-2 hover:bg-white/80 hover:border-emerald-300 transition-all mb-6">
-              <Plus size={16} />
+            <button className="w-full bg-white border-2 border-dashed border-[#D7ECE5] py-3 rounded-xl text-xs font-black text-rose-500/80 flex items-center justify-center gap-2 hover:bg-white/80 transition-all mb-6 shadow-sm">
+              <Plus size={16} strokeWidth={3} />
               Add draft
             </button>
 
-            <div className="bg-white/50 border border-dashed border-emerald-200 rounded-2xl p-8 flex flex-col items-center justify-center text-center">
-              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-emerald-600 shadow-sm mb-3">
+            <div className="bg-white/60 border border-dashed border-[#D7ECE5] rounded-xl p-8 flex flex-col items-center justify-center text-center">
+              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-300 shadow-sm mb-3">
                 <Inbox size={20} />
               </div>
               <p className="text-xs font-black text-slate-900 mb-1">No drafts waiting</p>
-              <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
+              <p className="text-[10px] text-slate-400 font-bold leading-relaxed px-4">
                 Save unscheduled tasks here, then drag them onto a date.
               </p>
             </div>
@@ -216,7 +244,10 @@ export default function Calendar() {
       
       {/* Floating Action Button (Optional/Visual) */}
       <div className="fixed bottom-8 right-8 xl:hidden">
-        <button className="w-14 h-14 bg-[#F05D50] text-white rounded-2xl flex items-center justify-center shadow-2xl shadow-orange-200 hover:scale-110 transition-transform">
+        <button 
+          onClick={() => openTaskModal()}
+          className="w-14 h-14 bg-[#F05D50] text-white rounded-2xl flex items-center justify-center shadow-2xl shadow-orange-200 hover:scale-110 transition-transform"
+        >
           <Plus size={24} />
         </button>
       </div>
