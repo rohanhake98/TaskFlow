@@ -62,8 +62,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       )}
 
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-100 flex flex-col transition-transform duration-300 lg:static lg:translate-x-0",
-        isOpen ? "translate-x-0" : "-translate-x-full"
+        "fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-100 flex flex-col transition-all duration-300 lg:static",
+        isOpen 
+          ? "translate-x-0 lg:ml-0" 
+          : "-translate-x-full lg:-ml-72 lg:opacity-0"
       )}>
         {/* Header */}
         <div className="p-6">
@@ -77,7 +79,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <p className="text-[11px] text-slate-400 font-bold mt-1">Cozy workspace</p>
               </div>
             </div>
-            <button className="p-2 hover:bg-slate-50 rounded-xl text-slate-400 transition-colors">
+            <button 
+              onClick={onClose}
+              className="p-2 hover:bg-slate-50 rounded-xl text-slate-400 transition-colors"
+            >
               <ChevronLeft size={20} />
             </button>
           </div>
@@ -105,7 +110,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   <NavLink
                     key={item.label}
                     to={item.path}
-                    onClick={() => onClose()}
                     className={({ isActive }) => cn(
                       "flex items-center gap-3.5 px-4 py-2.5 rounded-xl transition-all duration-200 group",
                       isActive 

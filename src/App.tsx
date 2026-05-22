@@ -3,13 +3,13 @@ import { MainLayout } from "./components/layout/MainLayout";
 import { PublicLayout } from "./components/layout/PublicLayout";
 import { AIChat } from "./components/ui/AIChat";
 import Dashboard from "./pages/Dashboard";
+import Calendar from "./pages/Calendar";
 import Landing from "./pages/Landing";
 import Solutions from "./pages/Solutions";
 import Pricing from "./pages/Pricing";
 
 // Placeholder components for other routes
 const AICoach = () => <div className="p-8 text-center text-slate-500 font-bold">AI Assistant Coach (Coming Soon)</div>;
-const CalendarView = () => <div className="p-8 text-center text-slate-500 font-bold">Personal Calendar (Coming Soon)</div>;
 const Projects = () => <div className="p-8 text-center text-slate-500 font-bold">Project Manager (Coming Soon)</div>;
 const Tasks = () => <div className="p-8 text-center text-slate-500 font-bold">Task / Kanban Board (Coming Soon)</div>;
 const Notes = () => <div className="p-8 text-center text-slate-500 font-bold">Personal Notes (Coming Soon)</div>;
@@ -41,7 +41,7 @@ function App() {
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/ai-assistant" element={<AICoach />} />
-          <Route path="/calendar" element={<CalendarView />} />
+          <Route path="/calendar" element={<Calendar />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/notes" element={<Notes />} />
