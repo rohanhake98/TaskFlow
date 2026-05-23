@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Outlet, Navigate } from "react-router-dom";
-import { SignedIn, SignedOut } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, useUser } from "@clerk/clerk-react";
+import { useEffect } from "react";
+import { syncUserToDb } from "./lib/syncUser";
 import { MainLayout } from "./components/layout/MainLayout";
 import { PublicLayout } from "./components/layout/PublicLayout";
 import { AIChat } from "./components/ui/AIChat";
@@ -28,10 +30,27 @@ const AppLayout = () => (
   </MainLayout>
 );
 
+const UserSync = () => {
+  const { user, isSignedIn } = useUser();
+
+  useEffect(() => {
+    if (isSignedIn && user) {
+      const email = user.primaryEmailAddress?.emailAddress;
+      const name = user.fullName || user.firstName || "";
+      if (email) {
+        syncUserToDb(user.id, email, name);
+      }
+    }
+  }, [isSignedIn, user]);
+
+  return null;
+};
+
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
       <SignedIn>
+        <UserSync />
         {children}
       </SignedIn>
       <SignedOut>
