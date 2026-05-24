@@ -54,3 +54,16 @@ export async function updateTask(taskId: string, updateData: Partial<Task>, getT
   }
   return res.json();
 }
+
+export async function deleteTask(taskId: string, getToken: () => Promise<string | null>): Promise<{ success: boolean }> {
+  const token = await getToken();
+  const res = await fetch(`/api/tasks/${taskId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.error || 'Failed to delete task');
+  }
+  return res.json();
+}

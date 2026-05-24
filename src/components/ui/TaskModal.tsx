@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar as CalendarIcon, Clock, Tag, MessageSquare, Zap, Target, User, Briefcase, Battery, BatteryWarning } from 'lucide-react';
+import { X, Calendar as CalendarIcon, Clock, Tag, MessageSquare, Zap, Target, User, Briefcase, Battery, BatteryWarning, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useTaskModal } from '../../context/TaskContext';
 import { cn } from '../../lib/utils';
 import { useAuth } from '@clerk/clerk-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createTask, Task } from '../../lib/tasksApi';
+import { createTask, updateTask, deleteTask, Task } from '../../lib/tasksApi';
 
 type Category = 'Focus' | 'Meeting' | 'Personal' | 'Work';
 type ItemType = 'Task' | 'Reminder';
@@ -14,7 +14,7 @@ type ItemType = 'Task' | 'Reminder';
 export function TaskModal() {
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
-  const { isTaskModalOpen, closeTaskModal, selectedDate } = useTaskModal();
+  const { isTaskModalOpen, closeTaskModal, selectedDate, editingTask } = useTaskModal();
   
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -22,40 +22,87 @@ export function TaskModal() {
   const [itemType, setItemType] = useState<ItemType>('Task');
   const [category, setCategory] = useState<Category>('Focus');
 
-  const createMutation = useMutation({
-    mutationFn: (taskData: Partial<Task>) => createTask(taskData, getToken),
+  // Sync state when editingTask changes or modal opens
+  useEffect(() => {
+    if (editingTask) {
+      setTitle(editingTask.title || '');
+      setDescription(editingTask.description || '');
+      setTime(editingTask.time || '');
+      setItemType(editingTask.itemType as ItemType || 'Task');
+      setCategory(editingTask.category as Category || 'Focus');
+    } else {
+      setTitle('');
+      setDescription('');
+      setTime('');
+      setItemType('Task');
+      setCategory('Focus');
+    }
+  }, [editingTask, isTaskModalOpen]);
+
+  const mutationOptions = {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       resetAndClose();
     },
     onError: (error: Error) => {
-      console.error("Failed to create task:", error);
-      alert(error.message || "Failed to save task.");
+      console.error("Task operation failed:", error);
+      alert(error.message || "Failed to process task.");
     }
+  };
+
+  const createMutation = useMutation({
+    mutationFn: (taskData: Partial<Task>) => createTask(taskData, getToken),
+    ...mutationOptions
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (taskData: Partial<Task>) => updateTask(editingTask!.id, taskData, getToken),
+    ...mutationOptions
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteTask(editingTask!.id, getToken),
+    ...mutationOptions
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    createMutation.mutate({
+    const taskData = {
       title,
       description,
       time,
       itemType,
       category,
-      scheduledDate: selectedDate ? selectedDate.toISOString() : new Date().toISOString(),
-    });
+      scheduledDate: selectedDate ? selectedDate.toISOString() : (editingTask?.scheduledDate || new Date().toISOString()),
+    };
+
+    if (editingTask) {
+      updateMutation.mutate(taskData);
+    } else {
+      createMutation.mutate(taskData);
+    }
   };
 
   const handleSaveDraft = () => {
-    createMutation.mutate({
+    const taskData = {
       title,
       description,
       time,
       itemType,
       category,
       scheduledDate: null,
-    });
+    };
+    if (editingTask) {
+      updateMutation.mutate(taskData);
+    } else {
+      createMutation.mutate(taskData);
+    }
+  };
+
+  const handleDelete = () => {
+    if (window.confirm('Are you sure you want to delete this task?')) {
+      deleteMutation.mutate();
+    }
   };
 
   const resetAndClose = () => {
@@ -95,16 +142,30 @@ export function TaskModal() {
               {/* Header */}
               <div className="flex items-center justify-between mb-8">
                 <div>
-                  <h2 className="text-2xl font-black text-slate-900 tracking-tight">Create calendar item</h2>
+                  <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+                    {editingTask ? 'Edit calendar item' : 'Create calendar item'}
+                  </h2>
                   <p className="text-[11px] font-bold text-slate-400 mt-1 uppercase tracking-wider flex items-center gap-1.5">
                     <CalendarIcon size={12} className="text-primary" />
                     Selected date: {selectedDate ? format(selectedDate, 'M/d/yyyy') : format(new Date(), 'M/d/yyyy')}
                   </p>
                 </div>
-                <button onClick={resetAndClose} className="p-2.5 text-slate-400 hover:text-slate-700 hover:bg-slate-50 rounded-2xl transition-all flex items-center gap-2 group">
-                  <span className="text-xs font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Close</span>
-                  <X size={20} />
-                </button>
+                <div className="flex items-center gap-2">
+                  {editingTask && (
+                    <button 
+                      type="button"
+                      onClick={handleDelete}
+                      className="p-2.5 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-2xl transition-all flex items-center gap-2 group mr-2"
+                      title="Delete task"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  )}
+                  <button onClick={resetAndClose} className="p-2.5 text-slate-400 hover:text-slate-700 hover:bg-slate-50 rounded-2xl transition-all flex items-center gap-2 group">
+                    <span className="text-xs font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Close</span>
+                    <X size={20} />
+                  </button>
+                </div>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -203,17 +264,17 @@ export function TaskModal() {
                   <button 
                     type="button"
                     onClick={handleSaveDraft}
-                    disabled={createMutation.isPending}
+                    disabled={createMutation.isPending || updateMutation.isPending}
                     className="flex-1 bg-white border-2 border-slate-100 text-slate-600 py-4 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 hover:border-slate-200 transition-all shadow-sm disabled:opacity-50"
                   >
-                    {createMutation.isPending ? "Saving..." : "Save draft"}
+                    {createMutation.isPending || updateMutation.isPending ? "Saving..." : (editingTask ? "Save as draft" : "Save draft")}
                   </button>
                   <button 
                     type="submit"
-                    disabled={createMutation.isPending}
+                    disabled={createMutation.isPending || updateMutation.isPending}
                     className="flex-[1.5] bg-primary text-white py-4 rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-orange-200 hover:bg-orange-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                   >
-                    {createMutation.isPending ? "Scheduling..." : "Schedule"}
+                    {createMutation.isPending || updateMutation.isPending ? (editingTask ? "Updating..." : "Scheduling...") : (editingTask ? "Save changes" : "Schedule")}
                   </button>
                 </div>
               </form>

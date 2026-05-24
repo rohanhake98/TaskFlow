@@ -28,48 +28,118 @@ import {
   Target,
   User,
   Briefcase,
-  Clock
+  Clock,
+  GripVertical
 } from 'lucide-react';
 import { useTaskModal } from '../context/TaskContext';
 import { cn } from '../lib/utils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@clerk/clerk-react';
 import { fetchTasks, Task, updateTask } from '../lib/tasksApi';
-import { DndContext, useDraggable, useDroppable, DragEndEvent, closestCenter } from '@dnd-kit/core';
+import { 
+  DndContext, 
+  useDraggable, 
+  useDroppable, 
+  DragEndEvent, 
+  closestCenter,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  defaultDropAnimationSideEffects,
+  DropAnimation
+} from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 
 // --- Helper Components ---
 
-function DraggableTask({ task, getCategoryColor, getCategoryIcon }: { task: Task, getCategoryColor: (c: string) => string, getCategoryIcon: (c: string) => React.ReactNode }) {
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+function DraggableTask({ 
+  task, 
+  getCategoryColor, 
+  getCategoryIcon, 
+  isOverlay = false,
+  onClick
+}: { 
+  task: Task, 
+  getCategoryColor: (c: string) => string, 
+  getCategoryIcon: (c: string) => React.ReactNode,
+  isOverlay?: boolean,
+  onClick?: (task: Task) => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, isDragging: activeDragging } = useDraggable({
     id: task.id,
     data: { task },
   });
 
+  const isShadow = !isOverlay && activeDragging;
+
   const style = transform ? {
     transform: CSS.Translate.toString(transform),
     zIndex: 50,
-  } : undefined;
+    transition: 'none',
+  } : {
+    transition: 'none',
+  };
+
+  const nodeRef = isOverlay ? null : setNodeRef;
+  const currentStyle = isOverlay ? undefined : style;
 
   return (
-    <div 
-      ref={setNodeRef} 
-      style={style} 
-      {...listeners} 
-      {...attributes}
-      className={cn(
-        "px-2 py-1 rounded-lg border text-[10px] font-bold truncate flex flex-col shadow-sm gap-0.5 cursor-grab active:cursor-grabbing bg-white",
-        getCategoryColor(task.category)
-      )}
-    >
-      <div className="flex items-center gap-1.5 truncate">
-        {getCategoryIcon(task.category)}
-        <span className="truncate">{task.title}</span>
+    <div className="relative group/task w-full">
+      <div 
+        ref={nodeRef} 
+        style={currentStyle} 
+        {...listeners} 
+        {...attributes}
+        onClick={(e) => {
+          if (onClick) {
+            e.stopPropagation();
+            onClick(task);
+          }
+        }}
+        className={cn(
+          "p-2.5 rounded-xl border text-[11px] font-bold flex items-start gap-2.5 shadow-sm cursor-grab active:cursor-grabbing bg-white transition-all overflow-hidden mb-1",
+          getCategoryColor(task.category),
+          isShadow && "opacity-30 border-dashed border-slate-300 shadow-none grayscale-[0.5]",
+          isOverlay && "shadow-xl scale-105 rotate-2 cursor-grabbing z-[100] border-2 opacity-100"
+        )}
+      >
+        <GripVertical size={14} className="text-slate-400 shrink-0 mt-0.5 opacity-0 group-hover/task:opacity-100 transition-opacity" />
+        <div className="flex flex-col gap-1 min-w-0 flex-1">
+          <div className="flex items-start gap-1.5">
+            <span className="shrink-0 mt-0.5">{getCategoryIcon(task.category)}</span>
+            <span className="break-words leading-tight">{task.title}</span>
+          </div>
+          {task.time && (
+            <div className="flex items-center gap-1.5 text-[10px] opacity-70 font-bold pl-0.5 mt-0.5">
+              <Clock size={10} />
+              <span>{task.time}</span>
+            </div>
+          )}
+        </div>
       </div>
-      {task.time && (
-        <div className="flex items-center gap-1 text-[9px] opacity-80 pl-3.5">
-          <Clock size={8} />
-          <span>{task.time}</span>
+
+      {/* Hover Preview - only show when not dragging and not in overlay mode */}
+      {!isOverlay && !activeDragging && (
+        <div className="absolute left-full ml-2 top-0 w-48 bg-white border border-slate-200 rounded-xl shadow-xl p-3 z-[100] opacity-0 group-hover/task:opacity-100 pointer-events-none transition-opacity duration-200 hidden md:block">
+          <div className="flex items-center gap-2 mb-2">
+            <div className={cn("w-2 h-2 rounded-full", task.category === 'Focus' ? 'bg-indigo-500' : task.category === 'Meeting' ? 'bg-amber-500' : task.category === 'Personal' ? 'bg-rose-500' : 'bg-emerald-500')} />
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{task.category}</span>
+          </div>
+          <h4 className="text-xs font-bold text-slate-800 mb-1.5 leading-snug">{task.title}</h4>
+          {task.description && (
+            <p className="text-[10px] text-slate-500 line-clamp-2 mb-2 leading-relaxed">{task.description}</p>
+          )}
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1 bg-slate-50 px-1.5 py-0.5 rounded text-[9px] font-bold text-slate-500">
+              <Zap size={10} className="text-amber-500" />
+              {task.energy || 'Medium'}
+            </span>
+            <span className="bg-slate-50 px-1.5 py-0.5 rounded text-[9px] font-bold text-slate-500">
+              {task.itemType}
+            </span>
+          </div>
         </div>
       )}
     </div>
@@ -108,7 +178,7 @@ function DroppableDay({ day, isCurrentMonth, isCurrentDay, openTaskModal, childr
         </button>
       </div>
       
-      <div className="space-y-1.5 overflow-y-auto max-h-[80px] custom-scrollbar">
+      <div className="space-y-2 mt-2">
         {children}
       </div>
     </div>
@@ -141,6 +211,15 @@ export default function Calendar() {
   const queryClient = useQueryClient();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week'>('month');
+  const [activeTask, setActiveTask] = useState<Task | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
 
   const { data: tasks = [], isLoading } = useQuery<Task[]>({
     queryKey: ['tasks'],
@@ -149,7 +228,32 @@ export default function Calendar() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string, data: Partial<Task> }) => updateTask(id, data, getToken),
-    onSuccess: () => {
+    onMutate: async (variables) => {
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+      await queryClient.cancelQueries({ queryKey: ['tasks'] });
+
+      // Snapshot the previous value
+      const previousTasks = queryClient.getQueryData<Task[]>(['tasks']);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData<Task[]>(['tasks'], (old) => {
+        return old?.map(task => 
+          task.id === variables.id ? { ...task, ...variables.data } : task
+        );
+      });
+
+      // Return a context object with the snapshotted value
+      return { previousTasks };
+    },
+    onError: (err, variables, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousTasks) {
+        queryClient.setQueryData(['tasks'], context.previousTasks);
+      }
+    },
+    onSettled: () => {
+      // Always refetch after error or success to throw away the optimistic update
+      // and ensure we are in sync with the server
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
     },
   });
@@ -172,8 +276,15 @@ export default function Calendar() {
 
   const goToToday = () => setCurrentDate(new Date());
 
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    setActiveTask(active.data.current?.task as Task);
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    setActiveTask(null);
+
     if (!over) return;
 
     const taskId = active.id as string;
@@ -234,7 +345,12 @@ export default function Calendar() {
   };
 
   return (
-    <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+    <DndContext 
+      sensors={sensors}
+      collisionDetection={closestCenter} 
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
       <div className="max-w-[1400px] mx-auto animate-in fade-in duration-700">
         {/* Page Header */}
         <div className="mb-10">
@@ -353,6 +469,7 @@ export default function Calendar() {
                         task={task} 
                         getCategoryColor={getCategoryColor} 
                         getCategoryIcon={getCategoryIcon} 
+                        onClick={(t) => openTaskModal(undefined, t)}
                       />
                     ))}
                   </DroppableDay>
@@ -361,7 +478,7 @@ export default function Calendar() {
             </div>
           </div>
 
-          {/* Draft Task Panel */}
+          {/* Draft Task Panel Sidebar */}
           <div className="w-full xl:w-80 space-y-4">
             <div className="bg-[#E9F5F1] border border-[#D7ECE5] rounded-xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-6">
@@ -392,6 +509,7 @@ export default function Calendar() {
                       task={task} 
                       getCategoryColor={getCategoryColor} 
                       getCategoryIcon={getCategoryIcon} 
+                      onClick={(t) => openTaskModal(undefined, t)}
                     />
                   </div>
                 ))}
@@ -432,6 +550,17 @@ export default function Calendar() {
           </button>
         </div>
       </div>
+
+      <DragOverlay dropAnimation={null}>
+        {activeTask ? (
+          <DraggableTask 
+            task={activeTask}
+            getCategoryColor={getCategoryColor}
+            getCategoryIcon={getCategoryIcon}
+            isOverlay
+          />
+        ) : null}
+      </DragOverlay>
     </DndContext>
   );
 }

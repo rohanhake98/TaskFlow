@@ -95,4 +95,26 @@ app.patch('/:id', clerkMiddleware(), async (c) => {
   }
 });
 
+// DELETE /:id - Delete task
+app.delete('/:id', clerkMiddleware(), async (c) => {
+  const auth = getAuth(c);
+  if (!auth?.userId) return c.json({ error: 'Unauthorized' }, 401);
+
+  const taskId = c.req.param('id');
+
+  try {
+    const [deletedTask] = await db
+      .delete(tasks)
+      .where(and(eq(tasks.id, taskId), eq(tasks.userId, auth.userId)))
+      .returning();
+
+    if (!deletedTask) return c.json({ error: 'Task not found' }, 404);
+
+    return c.json({ success: true, message: 'Task deleted successfully' });
+  } catch (error) {
+    console.error("Delete task error:", error);
+    return c.json({ error: 'Failed to delete task' }, 500);
+  }
+});
+
 export default app;

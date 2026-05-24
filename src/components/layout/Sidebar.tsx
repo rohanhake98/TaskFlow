@@ -158,10 +158,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 </p>
               </div>
             </div>
-            <div className="flex flex-col gap-0.5 text-slate-400">
-              <ChevronRight size={14} className="rotate-[-90deg]" />
-              <ChevronRight size={14} className="rotate-[90deg]" />
-            </div>
           </Link>
         </div>
       </aside>

@@ -66,3 +66,20 @@
 .claude-card {
   @apply bg-white border border-gray-100 shadow-soft hover:shadow-md transition-shadow duration-300 rounded-xl;
 }
+
+/* Hide scrollbar buttons and ensure no unwanted directional arrows appear */
+::-webkit-scrollbar-button {
+  display: none !important;
+}
+
+/* Remove default focus outlines that can look like boxes/arrows */
+*:focus {
+  outline: none !important;
+}
+
+/* Ensure task titles wrap correctly and don't cause overflow-based UI triggers */
+.break-words {
+  word-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+}
