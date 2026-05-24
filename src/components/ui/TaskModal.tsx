@@ -1,31 +1,61 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar as CalendarIcon, Clock, Tag, MessageSquare, Zap, Target, User, Briefcase } from 'lucide-react';
+import { X, Calendar as CalendarIcon, Clock, Tag, MessageSquare, Zap, Target, User, Briefcase, Battery, BatteryWarning } from 'lucide-react';
 import { format } from 'date-fns';
 import { useTaskModal } from '../../context/TaskContext';
 import { cn } from '../../lib/utils';
+import { useAuth } from '@clerk/clerk-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { createTask, Task } from '../../lib/tasksApi';
 
 type Category = 'Focus' | 'Meeting' | 'Personal' | 'Work';
 type ItemType = 'Task' | 'Reminder';
 
 export function TaskModal() {
+  const { getToken } = useAuth();
+  const queryClient = useQueryClient();
   const { isTaskModalOpen, closeTaskModal, selectedDate } = useTaskModal();
+  
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [time, setTime] = useState('');
   const [itemType, setItemType] = useState<ItemType>('Task');
   const [category, setCategory] = useState<Category>('Focus');
 
+  const createMutation = useMutation({
+    mutationFn: (taskData: Partial<Task>) => createTask(taskData, getToken),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      resetAndClose();
+    },
+    onError: (error: Error) => {
+      console.error("Failed to create task:", error);
+      alert(error.message || "Failed to save task.");
+    }
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Placeholder for scheduling the item
-    console.log("Scheduling calendar item:", { title, description, time, itemType, category });
-    resetAndClose();
+
+    createMutation.mutate({
+      title,
+      description,
+      time,
+      itemType,
+      category,
+      scheduledDate: selectedDate ? selectedDate.toISOString() : new Date().toISOString(),
+    });
   };
 
   const handleSaveDraft = () => {
-    console.log("Saving draft:", { title, description, time, itemType, category });
-    resetAndClose();
+    createMutation.mutate({
+      title,
+      description,
+      time,
+      itemType,
+      category,
+      scheduledDate: null,
+    });
   };
 
   const resetAndClose = () => {
@@ -173,15 +203,17 @@ export function TaskModal() {
                   <button 
                     type="button"
                     onClick={handleSaveDraft}
-                    className="flex-1 bg-white border-2 border-slate-100 text-slate-600 py-4 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 hover:border-slate-200 transition-all shadow-sm"
+                    disabled={createMutation.isPending}
+                    className="flex-1 bg-white border-2 border-slate-100 text-slate-600 py-4 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 hover:border-slate-200 transition-all shadow-sm disabled:opacity-50"
                   >
-                    Save draft
+                    {createMutation.isPending ? "Saving..." : "Save draft"}
                   </button>
                   <button 
                     type="submit"
-                    className="flex-[1.5] bg-primary text-white py-4 rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-orange-200 hover:bg-orange-600 transition-all flex items-center justify-center gap-2"
+                    disabled={createMutation.isPending}
+                    className="flex-[1.5] bg-primary text-white py-4 rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-orange-200 hover:bg-orange-600 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                   >
-                    Schedule
+                    {createMutation.isPending ? "Scheduling..." : "Schedule"}
                   </button>
                 </div>
               </form>

@@ -11,6 +11,13 @@ export default defineConfig(({ mode }) => ({
       host: "localhost",
       overlay: false,
     },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
   },
   plugins: [react()].filter(Boolean),
   resolve: {

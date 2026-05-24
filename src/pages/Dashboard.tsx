@@ -9,24 +9,55 @@ import {
   MessageSquare, 
   Wand2, 
   ArrowRight,
-  Clock
+  Clock,
+  Loader2
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useUser } from "@clerk/clerk-react";
+import { useUser, useAuth } from "@clerk/clerk-react";
 import { useTaskModal } from "../context/TaskContext";
+import { useQuery } from "@tanstack/react-query";
+import { fetchTasks, Task } from "../lib/tasksApi";
 import { cn } from "../lib/utils";
+import { isAfter, isBefore, startOfDay, endOfDay, parseISO } from "date-fns";
 
 export default function Dashboard() {
   const { user } = useUser();
+  const { getToken } = useAuth();
   const { openTaskModal } = useTaskModal();
   const userName = user?.firstName || user?.fullName || "Solo Creator";
+
+  // Fetch real tasks from backend
+  const { data: tasks = [], isLoading } = useQuery<Task[]>({
+    queryKey: ['tasks'],
+    queryFn: () => fetchTasks(getToken),
+  });
+
+  // Calculate Real Statistics
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter(t => t.status === 'Completed').length;
+  const pendingTasks = tasks.filter(t => t.status !== 'Completed').length;
+  
+  // Upcoming = Tasks with a date in the future (after today)
+  const today = endOfDay(new Date());
+  const upcomingTasks = tasks.filter(t => {
+    if (!t.scheduledDate) return false;
+    return isAfter(parseISO(t.scheduledDate), today);
+  }).length;
+
+  const overdueTasks = tasks.filter(t => {
+    if (!t.scheduledDate || t.status === 'Completed') return false;
+    return isBefore(parseISO(t.scheduledDate), startOfDay(new Date()));
+  }).length;
+
+  const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  const draftsCount = tasks.filter(t => !t.scheduledDate).length;
 
   // Semantic Pastel Palette from Documentation
   const moduleCards = [
     { 
       label: "Calendar", 
-      stat: "0 upcoming items", 
-      subStat: "0 drafts saved", 
+      stat: `${upcomingTasks} upcoming items`, 
+      subStat: `${draftsCount} drafts saved`, 
       icon: Calendar, 
       color: "text-[#1E4620]", 
       bg: "bg-[#E6F4EA]", 
@@ -37,8 +68,8 @@ export default function Dashboard() {
     },
     { 
       label: "Kanban / Tasks", 
-      stat: "0 tasks", 
-      subStat: "0 completeds across 0 bo...", 
+      stat: `${totalTasks} tasks`, 
+      subStat: `${completedTasks} completeds`, 
       icon: CheckSquare, 
       color: "text-[#5C4400]", 
       bg: "bg-[#FFF4CC]", 
@@ -106,6 +137,14 @@ export default function Dashboard() {
     { title: "Generate AI Templ...", desc: "Build a mini productivity app.", icon: Wand2, color: "text-[#5A1E24]", bg: "bg-[#FDECEF]", path: "/builder" },
   ];
 
+  if (isLoading) {
+    return (
+      <div className="h-full flex items-center justify-center py-20">
+        <Loader2 className="w-10 h-10 text-primary animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 animate-fade-in pb-20">
       {/* Header Card */}
@@ -145,15 +184,15 @@ export default function Dashboard() {
           <div className="flex flex-wrap items-center gap-4">
             <div className="bg-white/80 border border-slate-50 p-5 rounded-2xl w-24 shadow-sm text-center">
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Tasks</p>
-              <p className="text-2xl font-black text-slate-700">0</p>
+              <p className="text-2xl font-black text-slate-700">{totalTasks}</p>
             </div>
             <div className="bg-white/80 border border-slate-50 p-5 rounded-2xl w-32 shadow-sm text-center">
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Complete</p>
-              <p className="text-2xl font-black text-slate-700">0%</p>
+              <p className="text-2xl font-black text-slate-700">{completionRate}%</p>
             </div>
             <div className="bg-white/80 border border-slate-50 p-5 rounded-2xl w-24 shadow-sm text-center">
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Upcoming</p>
-              <p className="text-2xl font-black text-slate-700">0</p>
+              <p className="text-2xl font-black text-slate-700">{upcomingTasks}</p>
             </div>
           </div>
         </div>
@@ -246,29 +285,32 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 gap-3 flex-1 mb-8">
               <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl text-center">
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Total</p>
-                <p className="text-xl font-black text-slate-700">0</p>
+                <p className="text-xl font-black text-slate-700">{totalTasks}</p>
               </div>
               <div className={cn("bg-emerald-50/30 border border-emerald-50 p-4 rounded-2xl text-center")}>
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Completed</p>
-                <p className="text-xl font-black text-slate-700">0</p>
+                <p className="text-xl font-black text-slate-700">{completedTasks}</p>
               </div>
               <div className="bg-amber-50/30 border border-amber-50 p-4 rounded-2xl text-center">
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Pending</p>
-                <p className="text-xl font-black text-slate-700">0</p>
+                <p className="text-xl font-black text-slate-700">{pendingTasks}</p>
               </div>
               <div className="bg-rose-50/30 border border-rose-50 p-4 rounded-2xl text-center">
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Overdue</p>
-                <p className="text-xl font-black text-slate-700">0</p>
+                <p className="text-xl font-black text-slate-700">{overdueTasks}</p>
               </div>
             </div>
 
             <div className="pt-6 border-t border-slate-100">
               <div className="flex items-center justify-between mb-2.5">
                 <p className="text-[12px] font-black text-slate-700">Progress</p>
-                <p className="text-[12px] font-black text-slate-400">0%</p>
+                <p className="text-[12px] font-black text-slate-400">{completionRate}%</p>
               </div>
               <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                <div className="w-0 h-full bg-primary" />
+                <div 
+                  className="h-full bg-primary transition-all duration-500" 
+                  style={{ width: `${completionRate}%` }} 
+                />
               </div>
             </div>
           </div>

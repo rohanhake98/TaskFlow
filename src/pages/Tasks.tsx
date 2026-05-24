@@ -1,38 +1,40 @@
 import React, { useState } from 'react';
-import { CheckSquare, Plus, Zap, Battery, BatteryWarning } from 'lucide-react';
-import { useTaskModal } from '../context/TaskContext';
+import { CheckSquare, Plus, Zap, Battery, BatteryWarning, Loader2 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { useTaskModal } from '../context/TaskContext';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@clerk/clerk-react';
+import { fetchTasks, Task } from '../lib/tasksApi';
 
-type EnergyLevel = 'High' | 'Medium' | 'Low';
 type Status = 'Backlog' | 'Deep Focus' | 'Completed';
-
-interface Task {
-  id: string;
-  title: string;
-  energy: EnergyLevel;
-  status: Status;
-}
-
-const initialTasks: Task[] = [
-  { id: '1', title: 'Write Database Schema Migration', energy: 'High', status: 'Backlog' },
-  { id: '2', title: 'Reply to support emails', energy: 'Low', status: 'Backlog' },
-  { id: '3', title: 'Implement FocusBoard Component', energy: 'Medium', status: 'Deep Focus' },
-  { id: '4', title: 'Set up Tailwind config', energy: 'Medium', status: 'Completed' },
-];
 
 export default function Tasks() {
   const { openTaskModal } = useTaskModal();
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const { getToken } = useAuth();
+
+  const { data: tasks = [], isLoading, isError } = useQuery<Task[]>({
+    queryKey: ['tasks'],
+    queryFn: () => fetchTasks(getToken),
+  });
 
   const columns: Status[] = ['Backlog', 'Deep Focus', 'Completed'];
 
-  const getEnergyIcon = (level: EnergyLevel) => {
+  const getEnergyIcon = (level: string | null) => {
     switch (level) {
       case 'High': return <Zap size={14} className="text-amber-500" />;
       case 'Medium': return <Battery size={14} className="text-emerald-500" />;
       case 'Low': return <BatteryWarning size={14} className="text-slate-400" />;
+      default: return <Battery size={14} className="text-slate-300" />;
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-[1600px] mx-auto animate-in fade-in duration-700 h-full flex flex-col">
@@ -58,28 +60,46 @@ export default function Tasks() {
         </button>
       </div>
 
+      {isError && (
+        <div className="mb-6 p-4 bg-rose-50 border border-rose-100 text-rose-600 rounded-2xl text-sm font-bold">
+          Failed to load tasks. Please ensure the backend is running.
+        </div>
+      )}
+
       <div className="flex-1 flex gap-6 overflow-x-auto pb-4 items-start">
         {columns.map((col) => (
           <div key={col} className="w-80 shrink-0 bg-slate-50/50 border border-slate-100 rounded-[24px] p-4 flex flex-col max-h-full">
             <div className="flex items-center justify-between mb-4 px-2">
               <h3 className="text-sm font-black text-slate-800">{col}</h3>
               <span className="bg-white border border-slate-200 text-slate-500 text-[10px] font-black px-2 py-0.5 rounded-full">
-                {tasks.filter(t => t.status === col).length}
+                {tasks.filter((t: Task) => t.status === col).length}
               </span>
             </div>
             
             <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-              {tasks.filter(t => t.status === col).map((task) => (
+              {tasks.filter((t: Task) => t.status === col).map((task: Task) => (
                 <div key={task.id} className="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm hover:shadow-md transition-shadow cursor-grab">
                   <h4 className="text-sm font-bold text-slate-800 mb-3 leading-snug">{task.title}</h4>
                   <div className="flex items-center gap-2">
                     <span className="flex items-center gap-1 bg-slate-50 border border-slate-100 px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-600">
                       {getEnergyIcon(task.energy)}
-                      {task.energy}
+                      {task.energy || 'Medium'}
                     </span>
+                    {task.itemType === 'Reminder' && (
+                       <span className="bg-amber-50 text-amber-600 border border-amber-100 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">
+                         Reminder
+                       </span>
+                    )}
                   </div>
                 </div>
               ))}
+              
+              {tasks.filter((t: Task) => t.status === col).length === 0 && (
+                <div className="py-12 flex flex-col items-center justify-center text-center opacity-40">
+                  <Plus size={24} className="text-slate-400 mb-2" />
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Empty</p>
+                </div>
+              )}
             </div>
           </div>
         ))}
